@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16171a" media="(prefers-color-scheme: dark)">
+<title>Kartendex</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#f4f3ef;--tile:#fbfaf7;--line:#e4e1d9;--text:#2b2a27;--muted:#8f8b82;--accent:#d9483b;--sil:brightness(0) opacity(.08);--r:10px}
+@media (prefers-color-scheme:dark){:root{--bg:#16171a;--tile:#1e1f23;--line:#2b2d32;--text:#ecebe7;--muted:#878a91;--sil:brightness(0) invert(1) opacity(.07)}}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+[hidden]{display:none!important}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:baseline;gap:10px;padding:calc(env(safe-area-inset-top) + 16px) 16px 12px;background:var(--bg)}
+header h1{font-size:20px;font-weight:650;letter-spacing:-.01em}
+#count{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+#menuBtn{margin-left:auto;font-size:22px;line-height:1;padding:4px 6px;color:var(--muted)}
+#loading{padding:60px 20px;text-align:center;color:var(--muted)}
+#album{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:2px 10px calc(env(safe-area-inset-bottom) + 110px)}
+.gen{grid-column:1/-1;display:flex;align-items:baseline;gap:8px;margin:26px 4px 4px;font-size:13px;font-weight:600;letter-spacing:.02em}
+.gen:first-child{margin-top:4px}
+.gen span{color:var(--muted);font-weight:400}
+.gen em{margin-left:auto;font-style:normal;font-size:12px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+.tile{position:relative;aspect-ratio:63/88;border-radius:var(--r);overflow:hidden;background:var(--tile);border:1px solid var(--line);content-visibility:auto;contain-intrinsic-size:auto 170px}
+.tile.filled{border-color:transparent;background:transparent}
+.tile.filled>img{width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--r)}
+.tile .no{position:absolute;top:7px;left:9px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.03em}
+.tile .sil{position:absolute;left:14%;top:18%;width:72%;aspect-ratio:1;object-fit:contain;filter:var(--sil)}
+.tile .nm{position:absolute;left:6px;right:6px;bottom:8px;text-align:center;line-height:1.2}
+.tile .nm b{display:block;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .nm i{display:block;font-style:normal;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{position:absolute;right:5px;bottom:5px;font-size:9.5px;font-weight:700;padding:2px 5px;border-radius:5px;background:rgba(0,0,0,.6);color:#fff}
+.textcard{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:8px;gap:4px;height:100%;font-size:12px;border:1px dashed var(--line);border-radius:var(--r)}
+.textcard small{color:var(--muted);font-size:11px}
+.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,40%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+#fab{position:fixed;right:20px;bottom:calc(env(safe-area-inset-bottom) + 22px);width:58px;height:58px;border-radius:50%;background:#003153;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:6}
+#viewer{position:fixed;inset:0;z-index:20;background:rgba(10,10,12,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 10px)}
+#vImg{flex:1;min-height:0;width:100%;object-fit:contain}
+#vCap{color:#aaa;font-size:12.5px;text-align:center;margin-top:10px;line-height:1.45}
+#vActions{display:flex;gap:18px;margin-top:6px}
+#vActions button{color:#888;font-size:13px;padding:8px}
+#sheet{position:fixed;inset:0;z-index:15;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 30px)}
+.shead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.shead h2{font-size:18px;font-weight:650}
+.shead button{font-size:20px;padding:6px 8px;margin-left:-8px;color:var(--muted)}
+label{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px;letter-spacing:.02em}
+input[type=text]{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--tile);color:var(--text);font:inherit;font-size:16px;outline:none}
+input[type=text]:focus{border-color:var(--muted)}
+.field{position:relative}
+.sug{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--tile);border:1px solid var(--line);border-radius:12px;overflow:hidden;z-index:2;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.sug button{display:flex;width:100%;text-align:left;padding:11px 14px;gap:10px;border-bottom:1px solid var(--line)}
+.sug button:last-child{border-bottom:0}
+.sug .n{color:var(--muted);font-variant-numeric:tabular-nums;min-width:46px}
+.sug .e{color:var(--muted);margin-left:auto}
+#go{width:100%;margin-top:18px;padding:13px;border-radius:12px;background:var(--text);color:var(--bg);font-weight:600}
+#status{color:var(--muted);font-size:13px;margin:16px 2px 4px;min-height:1em}
+.grp{font-size:12px;font-weight:600;color:var(--muted);margin:18px 2px 8px;letter-spacing:.04em;text-transform:uppercase}
+.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.res{display:flex;flex-direction:column;gap:4px;text-align:left}
+.res .ci{aspect-ratio:63/88;width:100%;border-radius:8px;overflow:hidden;background:var(--tile)}
+.res img{width:100%;height:100%;object-fit:cover;display:block}
+.res span{font-size:11px;color:var(--muted);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#menu{position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.3);display:flex;align-items:flex-end}
+#menu .panel{width:100%;background:var(--bg);border-radius:18px 18px 0 0;padding:10px 8px calc(env(safe-area-inset-bottom) + 14px)}
+#menu .panel button{display:block;width:100%;text-align:left;padding:15px 16px;font-size:15px;border-radius:10px}
+#menu .panel small{display:block;color:var(--muted);padding:6px 16px 10px;font-size:12px}
+</style>
+</head>
+<body>
+<header><h1>Kartendex</h1><span id="count"></span><button id="menuBtn" aria-label="Menü">⋯</button></header>
+<div id="loading">Lade Pokédex …</div>
+<main id="album"></main>
+<button id="fab" aria-label="Karte hinzufügen"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
+
+<div id="viewer" class="layer" hidden>
+  <img id="vImg" alt="">
+  <div id="vCap"></div>
+  <div id="vActions"><button id="vReplace">Andere Karte wählen</button><button id="vRemove">Entfernen</button></div>
+</div>
+
+<section id="sheet" class="layer" hidden>
+  <div class="shead"><button id="sClose" aria-label="Schließen">✕</button><h2>Karte hinzufügen</h2></div>
+  <label for="qPoke">Pokémon</label>
+  <div class="field">
+    <input id="qPoke" type="text" placeholder="Name oder Nummer – z. B. Glurak, Charizard, 6" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div id="sug" class="sug" hidden></div>
+  </div>
+  <label for="qSet">Edition (optional)</label>
+  <input id="qSet" type="text" list="setList" placeholder="Set-Name auf Deutsch oder Englisch" autocomplete="off">
+  <datalist id="setList"></datalist>
+  <button id="go">Karten suchen</button>
+  <div id="status"></div>
+  <div id="results"></div>
+</section>
+
+<div id="menu" class="layer" hidden>
+  <div class="panel">
+    <button id="mExport">Backup speichern</button>
+    <button id="mImport">Backup laden</button>
+    <button id="mRefresh">Pokédex aktualisieren</button>
+    <small>Deine Sammlung wird nur auf diesem Gerät gespeichert. Sichere sie ab und zu per Backup.</small>
+  </div>
+</div>
+<input id="file" type="file" accept="application/json,.json" hidden>
+
+<script>
+const $=s=>document.querySelector(s);
+const TCG='https://api.tcgdex.net/v2';
+const LANGS=[['de','DE',['de']],['en','EN',['en']],['fr','FR',['fr']],['it','IT',['it']],['es','ES',['es']],
+ ['pt-br','PT',['en']],['pt-pt','PT',['en']],['nl','NL',['en']],['pl','PL',['en']],['ru','RU',['en']],
+ ['ja','JP',['ja-hrkt','ja']],['ko','KO',['ko']],['zh-tw','ZH',['zh-hant']],['zh-cn','ZH',['zh-hans']],
+ ['id','ID',['en']],['th','TH',['en']]];
+const LNAME={de:'Deutsch',en:'Englisch',fr:'Französisch',it:'Italienisch',es:'Spanisch','pt-br':'Portugiesisch','pt-pt':'Portugiesisch',nl:'Niederländisch',pl:'Polnisch',ru:'Russisch',ja:'Japanisch',ko:'Koreanisch','zh-tw':'Chinesisch (trad.)','zh-cn':'Chinesisch (vereinf.)',id:'Indonesisch',th:'Thailändisch'};
+const KEEP=['de','en','fr','es','it','ja-hrkt','ja','ko','zh-hant','zh-hans'];
+const GENS=[[151,'Kanto'],[251,'Johto'],[386,'Hoenn'],[493,'Sinnoh'],[649,'Einall'],[721,'Kalos'],[809,'Alola'],[905,'Galar'],[1025,'Paldea']];
+const genOf=p=>p.gen||(GENS.findIndex(g=>p.id<=g[0])+1||GENS.length+1);
+const region=g=>GENS[g-1]?GENS[g-1][1]:'';
+
+let dex=[],byId={},coll=JSON.parse(localStorage.getItem('kd.coll')||'{}');
+const save=()=>localStorage.setItem('kd.coll',JSON.stringify(coll));
+const pad=n=>String(n).padStart(4,'0');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const spr=id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+
+/* ---------- Pokédex laden ---------- */
+async function gql(url,query){
+  const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query})});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json(); if(j.errors) throw new Error(j.errors[0].message); return j.data;
+}
+function mk(id,slug,gen,pairs){const names={};pairs.forEach(([l,n])=>{if(KEEP.includes(l))names[l]=n});return {id,gen,de:names.de||names.en||slug,en:names.en||slug,names};}
+async function fetchDex(){
+  try{
+    const d=await gql('https://graphql.pokeapi.co/v1beta2','query{pokemonspecies(order_by:{id:asc}){id name generation_id pokemonspeciesnames{name language{name}}}}');
+    return {list:d.pokemonspecies.map(s=>mk(s.id,s.name,s.generation_id,s.pokemonspeciesnames.map(n=>[n.language.name,n.name]))),ok:true};
+  }catch(e){}
+  try{
+    const d=await gql('https://beta.pokeapi.co/graphql/v1beta','query{pokemon_v2_pokemonspecies(order_by:{id:asc}){id name generation_id pokemon_v2_pokemonspeciesnames{name pokemon_v2_language{name}}}}');
+    return {list:d.pokemon_v2_pokemonspecies.map(s=>mk(s.id,s.name,s.generation_id,s.pokemon_v2_pokemonspeciesnames.map(n=>[n.pokemon_v2_language.name,n.name]))),ok:true};
+  }catch(e){}
+  const r=await fetch('https://pokeapi.co/api/v2/pokemon-species?limit=3000'); const j=await r.json();
+  return {list:j.results.map(s=>{const id=+s.url.split('/').filter(Boolean).pop();const n=s.name.replace(/(^|-)\w/g,m=>m.toUpperCase());return {id,de:n,en:n,names:{en:n}};}).sort((a,b)=>a.id-b.id),ok:false};
+}
+async function loadDex(force){
+  const c=JSON.parse(localStorage.getItem('kd.dex')||'null');
+  if(c&&!force&&Date.now()-c.t<30*864e5) return c.list;
+  try{const {list,ok}=await fetchDex();localStorage.setItem('kd.dex',JSON.stringify({t:ok?Date.now():0,list}));return list;}
+  catch(e){if(c) return c.list; throw e;}
+}
+
+/* ---------- Ebenen (Vollbild, Suche, Menü) + Zurück-Taste ---------- */
+function openLayer(el,replace){el.hidden=false;document.body.style.overflow='hidden';(replace?history.replaceState:history.pushState).call(history,{layer:el.id},'');}
+function hideLayers(){document.querySelectorAll('.layer').forEach(l=>l.hidden=true);document.body.style.overflow='';}
+function closeLayer(){if(history.state&&history.state.layer)history.back();else hideLayers();}
+addEventListener('popstate',hideLayers);
+
+/* ---------- Album ---------- */
+function tileHTML(p){
+  const c=coll[p.id];
+  if(!c) return `<span class="no">#${pad(p.id)}</span><img class="sil" loading="lazy" decoding="async" alt="" src="${spr(p.id)}" onerror="this.remove()"><span class="nm"><b>${esc(p.de)}</b><i>${esc(p.en)}</i></span>`;
+  if(!c.img) return `<div class="textcard"><b>${esc(c.name)}</b><small>${esc(c.set)}<br>Nr. ${esc(c.localId)} · ${esc(c.label)}</small><small>(kein Bild verfügbar)</small></div>`;
+  return `<img loading="lazy" decoding="async" alt="${esc(c.name)}" src="${c.img}/high.webp">`+(c.imgLang!==c.lang?`<span class="badge">${esc(c.label)}</span>`:'');
+}
+function fillTile(el,p){el.className='tile'+(coll[p.id]?' filled':'');el.innerHTML=tileHTML(p);}
+function render(){
+  const f=document.createDocumentFragment();let last=0;
+  dex.forEach(p=>{
+    if(p.g!==last){last=p.g;const h=document.createElement('h2');h.className='gen';h.dataset.gen=p.g;
+      h.innerHTML=`Generation ${p.g}${region(p.g)?` <span>· ${region(p.g)}</span>`:''}<em></em>`;f.appendChild(h);}
+    const el=document.createElement('div');el.dataset.id=p.id;fillTile(el,p);f.appendChild(el);
+  });
+  $('#album').replaceChildren(f);updateCount();
+}
+function updateCount(){
+  const per={};let n=0;
+  dex.forEach(p=>{const c=per[p.g]||(per[p.g]=[0,0]);c[1]++;if(coll[p.id]){c[0]++;n++;}});
+  $('#count').textContent=`${n} / ${dex.length}`;
+  document.querySelectorAll('.gen').forEach(h=>{const c=per[h.dataset.gen];h.querySelector('em').textContent=c?`${c[0]} / ${c[1]}`:'';});
+}
+function refreshTile(id){const el=$(`.tile[data-id="${id}"]`);if(el)fillTile(el,byId[id]);updateCount();}
+$('#album').addEventListener('click',e=>{const t=e.target.closest('.tile');if(!t)return;const id=+t.dataset.id;coll[id]?openViewer(id):openSheet(byId[id]);});
+$('#fab').onclick=()=>openSheet(null);
+
+/* ---------- Vollbild ---------- */
+let vId=null;
+function openViewer(id){
+  const c=coll[id],p=byId[id];vId=id;const img=$('#vImg');
+  if(c.img){img.hidden=false;img.src=`${c.img}/high.webp`;}else{img.hidden=true;}
+  $('#vCap').innerHTML=`#${pad(id)} ${esc(p.de)} · ${esc(c.name)}<br>${esc(c.set)} · Nr. ${esc(c.localId)} · ${esc(LNAME[c.lang]||c.lang)}`+
+    (c.img&&c.imgLang!==c.lang?`<br><small>Bild ersatzweise in ${esc(LNAME[c.imgLang])}</small>`:'');
+  openLayer($('#viewer'));
+}
+$('#viewer').addEventListener('click',closeLayer);
+$('#vReplace').addEventListener('click',e=>{e.stopPropagation();$('#viewer').hidden=true;openSheet(byId[vId],true);});
+$('#vRemove').addEventListener('click',e=>{e.stopPropagation();if(!confirm('Karte aus dem Album entfernen?'))return;delete coll[vId];save();refreshTile(vId);closeLayer();});
+
+/* ---------- Editionen ---------- */
+const setCache={};let setOpts=[],setsLoaded=false;
+async function getSets(lang){
+  if(setCache[lang]) return setCache[lang];
+  const key='kd.sets.'+lang,c=JSON.parse(localStorage.getItem(key)||'null');
+  if(c&&Date.now()-c.t<7*864e5) return setCache[lang]=c.m;
+  try{const r=await fetch(`${TCG}/${lang}/sets`);if(!r.ok)throw 0;const m={};(await r.json()).forEach(s=>m[s.id]=s.name);
+    localStorage.setItem(key,JSON.stringify({t:Date.now(),m}));return setCache[lang]=m;}
+  catch(e){return c?c.m:{};}
+}
+async function loadSetList(){
+  if(setsLoaded) return;
+  const [de,en]=await Promise.all([getSets('de'),getSets('en')]);
+  const ids=[...new Set([...Object.keys(en),...Object.keys(de)])].reverse();
+  if(!ids.length) return;
+  setsLoaded=true;
+  setOpts=ids.map(id=>{const d=de[id],e=en[id];const label=d&&e&&fold(d)!==fold(e)?`${d} · ${e}`:(d||e);return {id,label,f:fold(label)};});
+  $('#setList').innerHTML=setOpts.map(o=>`<option value="${esc(o.label)}">`).join('');
+}
+function setFilter(){const q=fold($('#qSet').value);if(!q)return null;return new Set(setOpts.filter(o=>o.f.includes(q)).map(o=>o.id));}
+
+/* ---------- Suche ---------- */
+let selPoke=null,searchToken=0;
+function openSheet(p,replace){
+  selPoke=p||null;$('#qPoke').value=p?`#${pad(p.id)} ${p.de}`:'';$('#qSet').value='';
+  $('#results').innerHTML='';$('#status').textContent='';$('#sug').hidden=true;
+  openLayer($('#sheet'),replace);loadSetList();
+  if(!p) setTimeout(()=>$('#qPoke').focus(),60);
+}
+$('#sClose').onclick=closeLayer;
+$('#qPoke').addEventListener('input',()=>{
+  selPoke=null;const q=fold($('#qPoke').value).replace(/^#/,'');const box=$('#sug');
+  if(!q){box.hidden=true;return;}
+  let hits;
+  if(/^\d+$/.test(q)){const n=+q;hits=dex.filter(p=>String(p.id).startsWith(String(n))).sort((a,b)=>(a.id===n?-1:0)-(b.id===n?-1:0)||a.id-b.id);}
+  else{hits=dex.map(p=>({p,s:p.f.some(x=>x.startsWith(q))?0:p.f.some(x=>x.includes(q))?1:9})).filter(x=>x.s<9).sort((a,b)=>a.s-b.s||a.p.id-b.p.id).map(x=>x.p);}
+  hits=hits.slice(0,8);
+  box.innerHTML=hits.map(p=>`<button data-id="${p.id}"><span class="n">#${pad(p.id)}</span><span>${esc(p.de)}</span><span class="e">${esc(p.en)}</span></button>`).join('');
+  box.hidden=!hits.length;
+});
+$('#sug').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;selPoke=byId[b.dataset.id];$('#qPoke').value=`#${pad(selPoke.id)} ${selPoke.de}`;$('#sug').hidden=true;});
+$('#qPoke').addEventListener('keydown',e=>{if(e.key==='Enter')$('#go').click();});
+$('#qSet').addEventListener('keydown',e=>{if(e.key==='Enter')$('#go').click();});
+$('#go').onclick=()=>{
+  if(!selPoke&&!$('#sug').hidden){const b=$('#sug button');if(b)b.click();}
+  if(!selPoke){$('#status').textContent='Bitte zuerst ein Pokémon aus der Vorschlagsliste wählen.';return;}
+  $('#sug').hidden=true;if(document.activeElement)document.activeElement.blur();searchCards(selPoke);
+};
+const nameRe=n=>new RegExp('(^|[^\\p{L}\\p{N}])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^\\p{L}\\p{N}])','iu');
+
+async function searchCards(p){
+  const tok=++searchToken,st=$('#status'),res=$('#results');
+  res.innerHTML='';st.textContent='Suche läuft …';
+  await loadSetList();const filt=setFilter();
+  if(filt&&!filt.size){st.textContent='Keine Edition passt zu dieser Eingabe.';return;}
+  const seen=new Set();
+  const groups=await Promise.all(LANGS.map(async([lang,label,src])=>{
+    let terms=src.map(s=>p.names[s]).filter(Boolean);if(!terms.length)terms=[p.en];
+    terms=[...new Set(terms.map(t=>t.replace(/[♀♂]/g,'').trim()))];
+    const cjk=/^(ja|ko|zh)/.test(lang),out=[];
+    for(const t of terms){
+      try{
+        const r=await fetch(`${TCG}/${lang}/cards?name=${encodeURIComponent(t)}`);if(!r.ok)continue;
+        const re=nameRe(t);
+        for(const c of await r.json()){
+          if(!cjk&&!re.test(c.name))continue;
+          const setId=c.id.slice(0,c.id.length-String(c.localId).length-1);
+          if(filt&&!filt.has(setId))continue;
+          const key=label+'|'+c.id;if(seen.has(key))continue;seen.add(key);
+          out.push({...c,lang,label,setId});
+        }
+      }catch(e){}
+    }
+    if(out.length){const sets=await getSets(lang);out.forEach(c=>c.setName=sets[c.setId]||c.setId);out.reverse();}
+    return {lang,out};
+  }));
+  if(tok!==searchToken)return;
+  const total=groups.reduce((a,g)=>a+g.out.length,0);
+  if(!total){st.textContent='Keine Karten gefunden.';return;}
+  st.textContent=`${total} Karten gefunden – tippe auf deine Karte.`;
+  const all=[];
+  res.innerHTML=groups.filter(g=>g.out.length).map(g=>`<div class="grp">${esc(LNAME[g.lang])} · ${g.out.length}</div><div class="rgrid">`+
+    g.out.map(c=>{all.push(c);return `<button class="res" data-i="${all.length-1}"><div class="ci">${c.image?`<img loading="lazy" decoding="async" alt="" src="${c.image}/low.webp">`:`<div class="textcard"><b>${esc(c.name)}</b><small>kein Bild</small></div>`}</div><span>${esc(c.setName)} · ${esc(c.localId)}</span></button>`;}).join('')+'</div>').join('');
+  res.onclick=e=>{const b=e.target.closest('.res');if(b)choose(p,all[+b.dataset.i]);};
+}
+
+async function choose(p,c){
+  if(coll[p.id]&&!confirm(`Für #${pad(p.id)} ${p.de} ist schon eine Karte eingetragen. Ersetzen?`))return;
+  let img=c.image||null,imgLang=c.lang;
+  if(!img){
+    $('#status').textContent='Suche Ersatzbild …';
+    for(const l of ['de','en']){try{const r=await fetch(`${TCG}/${l}/cards/${encodeURIComponent(c.id)}`);if(r.ok){const j=await r.json();if(j.image){img=j.image;imgLang=l;break;}}}catch(e){}}
+  }
+  coll[p.id]={cardId:c.id,lang:c.lang,label:c.label,name:c.name,set:c.setName,localId:c.localId,img,imgLang,added:Date.now()};
+  save();refreshTile(p.id);closeLayer();
+  setTimeout(()=>{const el=$(`.tile[data-id="${p.id}"]`);if(!el)return;el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');},250);
+}
+
+/* ---------- Menü & Backup ---------- */
+$('#menuBtn').onclick=()=>openLayer($('#menu'));
+$('#menu').onclick=e=>{if(e.target.id==='menu')closeLayer();};
+$('#mExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify({app:'kartendex',v:1,date:new Date().toISOString(),collection:coll})],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`kartendex-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);a.click();a.remove();closeLayer();
+};
+$('#mImport').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const d=JSON.parse(await f.text());const c=d.collection||d;if(!c||typeof c!=='object')throw 0;
+    if(!confirm(`Backup mit ${Object.keys(c).length} Karten laden? Die aktuelle Sammlung wird ersetzt.`))return;
+    coll=c;save();render();closeLayer();}
+  catch(err){alert('Diese Datei ist kein gültiges Backup.');}
+};
+$('#mRefresh').onclick=()=>{closeLayer();init(true);};
+
+/* ---------- Start ---------- */
+async function init(force){
+  const L=$('#loading');L.hidden=false;L.textContent='Lade Pokédex …';
+  try{dex=await loadDex(force);}
+  catch(e){L.innerHTML='Pokédex konnte nicht geladen werden.<br>Bitte Internetverbindung prüfen.<br><br><button id="retry" style="text-decoration:underline">Erneut versuchen</button>';$('#retry').onclick=()=>init(force);return;}
+  byId={};dex.forEach(p=>{p.f=[fold(p.de),fold(p.en)];p.g=genOf(p);byId[p.id]=p;});
+  L.hidden=true;render();
+}
+history.replaceState(null,'');init();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
