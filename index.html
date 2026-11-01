@@ -9,11 +9,14 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
-:root{--bg:#f4f3ef;--tile:#fbfaf7;--line:#e4e1d9;--text:#2b2a27;--muted:#8f8b82;--accent:#d9483b;--sil:brightness(0) opacity(.08);--r:10px}
-@media (prefers-color-scheme:dark){:root{--bg:#16171a;--tile:#1e1f23;--line:#2b2d32;--text:#ecebe7;--muted:#878a91;--sil:brightness(0) invert(1) opacity(.07)}}
+:root{--bg:#f4f3ef;--tile:#fbfaf7;--line:#e4e1d9;--text:#2b2a27;--muted:#8f8b82;--accent:#d9483b;--blue:#003153;--sil:brightness(0) opacity(.08);--r:10px;
+--mk-bg:#f9d4ac;--mk-line:#eda86a;--mk-text:#a4561a;--mk-sil:brightness(0) opacity(.13)}
+@media (prefers-color-scheme:dark){:root{--bg:#16171a;--tile:#1e1f23;--line:#2b2d32;--text:#ecebe7;--muted:#878a91;--blue:#4a86b8;--sil:brightness(0) invert(1) opacity(.07);
+--mk-bg:#4b2f15;--mk-line:#77491f;--mk-text:#eaa66a;--mk-sil:brightness(0) invert(1) opacity(.1)}}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:var(--bg);color:var(--text);font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
 [hidden]{display:none!important}
 header{position:sticky;top:0;z-index:5;display:flex;align-items:baseline;gap:10px;padding:calc(env(safe-area-inset-top) + 16px) 16px 12px;background:var(--bg)}
 header h1{font-size:20px;font-weight:650;letter-spacing:-.01em}
@@ -21,13 +24,28 @@ header h1{font-size:20px;font-weight:650;letter-spacing:-.01em}
 #menuBtn{margin-left:auto;font-size:22px;line-height:1;padding:4px 6px;color:var(--muted)}
 #loading{padding:60px 20px;text-align:center;color:var(--muted)}
 #album{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:2px 10px calc(env(safe-area-inset-bottom) + 110px)}
-.gen{grid-column:1/-1;display:flex;align-items:baseline;gap:8px;margin:26px 4px 4px;font-size:13px;font-weight:600;letter-spacing:.02em}
+
+/* Generationen-Banner */
+.gen{grid-column:1/-1;position:relative;height:96px;margin:24px 0 4px;border-radius:14px;overflow:hidden;padding:12px 14px;font-size:14.5px;font-weight:650;letter-spacing:.01em;
+ --l1:hsl(var(--h) 26% 76%);--l2:hsl(var(--h) 24% 64%);--l3:hsl(var(--h) 26% 50%);--sn:hsl(var(--h) 50% 97%);--sun:hsl(var(--h) 80% 98% / .85);
+ background:linear-gradient(180deg,hsl(var(--h) 55% 95%),hsl(var(--h) 42% 87%))}
 .gen:first-child{margin-top:4px}
-.gen span{color:var(--muted);font-weight:400}
-.gen em{margin-left:auto;font-style:normal;font-size:12px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+.gen svg{position:absolute;inset:0;width:100%;height:100%}
+.gen .gt{position:relative}
+.gen .gt span{font-weight:450;opacity:.7}
+.gen em{position:absolute;top:10px;right:10px;font-style:normal;font-size:12px;font-weight:550;font-variant-numeric:tabular-nums;padding:3px 9px;border-radius:20px;background:hsl(var(--h) 60% 98% / .75)}
+.l1{fill:var(--l1)}.l2{fill:var(--l2)}.l3{fill:var(--l3)}.sn{fill:var(--sn)}.sun{fill:var(--sun)}.ln{fill:none;stroke:var(--l1);stroke-width:1.6}
+@media (prefers-color-scheme:dark){
+ .gen{background:linear-gradient(180deg,hsl(var(--h) 28% 24%),hsl(var(--h) 26% 16%));--l1:hsl(var(--h) 18% 19%);--l2:hsl(var(--h) 20% 14%);--l3:hsl(var(--h) 22% 10%);--sn:hsl(var(--h) 20% 62%);--sun:hsl(var(--h) 45% 78% / .55)}
+ .gen em{background:hsl(var(--h) 25% 12% / .6)}}
+
+/* Kacheln */
 .tile{position:relative;aspect-ratio:63/88;border-radius:var(--r);overflow:hidden;background:var(--tile);border:1px solid var(--line);content-visibility:auto;contain-intrinsic-size:auto 170px}
 .tile.filled{border-color:transparent;background:transparent}
 .tile.filled>img{width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--r)}
+.tile.marked{background:var(--mk-bg);border-color:var(--mk-line)}
+.tile.marked .sil{filter:var(--mk-sil)}
+.tile.marked .no,.tile.marked .nm i{color:var(--mk-text)}
 .tile .no{position:absolute;top:7px;left:9px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.03em}
 .tile .sil{position:absolute;left:14%;top:18%;width:72%;aspect-ratio:1;object-fit:contain;filter:var(--sil)}
 .tile .nm{position:absolute;left:6px;right:6px;bottom:8px;text-align:center;line-height:1.2}
@@ -38,33 +56,69 @@ header h1{font-size:20px;font-weight:650;letter-spacing:-.01em}
 .textcard small{color:var(--muted);font-size:11px}
 .flash{animation:flash 1.6s ease}
 @keyframes flash{0%,40%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
-#fab{position:fixed;right:20px;bottom:calc(env(safe-area-inset-bottom) + 22px);width:58px;height:58px;border-radius:50%;background:#003153;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:6}
+
+/* Schwebende Buttons */
+#fabs{position:fixed;right:20px;bottom:calc(env(safe-area-inset-bottom) + 22px);display:flex;gap:14px;z-index:6}
+.fab{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+#fab{background:#003153}
+#fabFind{background:#d9483b}
+
+/* Vollbild */
 #viewer{position:fixed;inset:0;z-index:20;background:rgba(10,10,12,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 10px)}
 #vImg{flex:1;min-height:0;width:100%;object-fit:contain}
 #vCap{color:#aaa;font-size:12.5px;text-align:center;margin-top:10px;line-height:1.45}
-#vActions{display:flex;gap:18px;margin-top:6px}
-#vActions button{color:#888;font-size:13px;padding:8px}
-#sheet{position:fixed;inset:0;z-index:15;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 30px)}
+#vActions{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:6px}
+#vActions button{color:#888;font-size:13px;padding:8px 10px}
+
+/* Vollflächige Ebenen */
+.pane{position:fixed;inset:0;z-index:15;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 30px)}
+#own{z-index:30}
 .shead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .shead h2{font-size:18px;font-weight:650}
 .shead button{font-size:20px;padding:6px 8px;margin-left:-8px;color:var(--muted)}
 label{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px;letter-spacing:.02em}
-input[type=text]{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--tile);color:var(--text);font:inherit;font-size:16px;outline:none}
-input[type=text]:focus{border-color:var(--muted)}
+input[type=text],select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--tile);color:var(--text);font:inherit;font-size:16px;outline:none}
+input[type=text]:focus,select:focus{border-color:var(--muted)}
 .field{position:relative}
 .sug{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--tile);border:1px solid var(--line);border-radius:12px;overflow:hidden;z-index:2;box-shadow:0 8px 24px rgba(0,0,0,.12)}
 .sug button{display:flex;width:100%;text-align:left;padding:11px 14px;gap:10px;border-bottom:1px solid var(--line)}
 .sug button:last-child{border-bottom:0}
 .sug .n{color:var(--muted);font-variant-numeric:tabular-nums;min-width:46px}
 .sug .e{color:var(--muted);margin-left:auto}
-#go{width:100%;margin-top:18px;padding:13px;border-radius:12px;background:var(--text);color:var(--bg);font-weight:600}
+.primary{width:100%;margin-top:18px;padding:13px;border-radius:12px;background:var(--text);color:var(--bg);font-weight:600}
+.ghost{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--line);font-weight:550}
+#markBtn{color:var(--mk-text);border-color:var(--mk-line)}
+#markBtn.on{background:var(--mk-bg)}
+#ownBtn{margin:4px 0 2px}
 #status{color:var(--muted);font-size:13px;margin:16px 2px 4px;min-height:1em}
+.hint{color:var(--muted);font-size:13px;line-height:1.45;margin-top:8px}
 .grp{font-size:12px;font-weight:600;color:var(--muted);margin:18px 2px 8px;letter-spacing:.04em;text-transform:uppercase}
 .rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .res{display:flex;flex-direction:column;gap:4px;text-align:left}
-.res .ci{aspect-ratio:63/88;width:100%;border-radius:8px;overflow:hidden;background:var(--tile)}
+.res .ci{position:relative;aspect-ratio:63/88;width:100%;border-radius:8px;overflow:hidden;background:var(--tile)}
 .res img{width:100%;height:100%;object-fit:cover;display:block}
-.res span{font-size:11px;color:var(--muted);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.res>span{font-size:11px;color:var(--muted);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Kartendex-Suche */
+.flist{margin-top:10px}
+.flist button{display:flex;align-items:center;gap:10px;width:100%;padding:13px 4px;border-bottom:1px solid var(--line);text-align:left}
+.flist .n{color:var(--muted);font-variant-numeric:tabular-nums;min-width:48px}
+.flist .e{color:var(--muted);margin-left:auto;font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--line)}
+.dot.own{background:var(--blue)}
+.dot.mk{background:var(--mk-line)}
+
+/* Eigenes Bild */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stage{position:relative;width:min(100%,300px);aspect-ratio:63/88;margin:16px auto 0;border:1px dashed var(--muted);border-radius:12px;overflow:hidden;background:var(--tile)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+.pick{position:absolute;inset:0;color:var(--muted);font-size:14px;padding:20px}
+.tools{display:flex;align-items:center;gap:12px;width:min(100%,300px);margin:12px auto 0}
+.tools input{flex:1;accent-color:var(--blue)}
+.tools button{color:var(--muted);font-size:20px;padding:4px 8px}
+#oTools .hint{width:min(100%,300px);margin:6px auto 0}
+
+/* Menü */
 #menu{position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.3);display:flex;align-items:flex-end}
 #menu .panel{width:100%;background:var(--bg);border-radius:18px 18px 0 0;padding:10px 8px calc(env(safe-area-inset-bottom) + 14px)}
 #menu .panel button{display:block;width:100%;text-align:left;padding:15px 16px;font-size:15px;border-radius:10px}
@@ -75,15 +129,18 @@ input[type=text]:focus{border-color:var(--muted)}
 <header><h1>Kartendex</h1><span id="count"></span><button id="menuBtn" aria-label="Menü">⋯</button></header>
 <div id="loading">Lade Pokédex …</div>
 <main id="album"></main>
-<button id="fab" aria-label="Karte hinzufügen"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
+<div id="fabs">
+  <button id="fabFind" class="fab" aria-label="Im Kartendex suchen"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="#fff" stroke-width="2.2"/><path d="M15 15l5 5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+  <button id="fab" class="fab" aria-label="Karte hinzufügen"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
+</div>
 
 <div id="viewer" class="layer" hidden>
   <img id="vImg" alt="">
   <div id="vCap"></div>
-  <div id="vActions"><button id="vReplace">Andere Karte wählen</button><button id="vRemove">Entfernen</button></div>
+  <div id="vActions"><button id="vReplace">Andere Karte wählen</button><button id="vOwn">Eigenes Bild</button><button id="vRemove">Entfernen</button></div>
 </div>
 
-<section id="sheet" class="layer" hidden>
+<section id="sheet" class="layer pane" hidden>
   <div class="shead"><button id="sClose" aria-label="Schließen">✕</button><h2>Karte hinzufügen</h2></div>
   <label for="qPoke">Pokémon</label>
   <div class="field">
@@ -93,9 +150,38 @@ input[type=text]:focus{border-color:var(--muted)}
   <label for="qSet">Edition (optional)</label>
   <input id="qSet" type="text" list="setList" placeholder="Set-Name auf Deutsch oder Englisch" autocomplete="off">
   <datalist id="setList"></datalist>
-  <button id="go">Karten suchen</button>
+  <button id="go" class="primary">Karten suchen</button>
+  <button id="markBtn" class="ghost">Keine IR / SIR verfügbar</button>
   <div id="status"></div>
   <div id="results"></div>
+</section>
+
+<section id="find" class="layer pane" hidden>
+  <div class="shead"><button id="fClose" aria-label="Schließen">✕</button><h2>Im Kartendex suchen</h2></div>
+  <input id="fq" type="text" placeholder="Name (deutsch/englisch) oder Nummer" autocomplete="off" autocapitalize="off" spellcheck="false">
+  <div id="fList" class="flist"></div>
+</section>
+
+<section id="own" class="layer pane" hidden>
+  <div class="shead"><button id="oClose" aria-label="Schließen">✕</button><h2>Eigenes Bild</h2></div>
+  <p id="oInfo" class="hint"></p>
+  <div id="oMeta">
+    <label for="oSet">Edition</label>
+    <input id="oSet" type="text" list="setList" placeholder="optional" autocomplete="off">
+    <div class="row2">
+      <div><label for="oNo">Kartennummer</label><input id="oNo" type="text" placeholder="optional" autocomplete="off"></div>
+      <div><label for="oLang">Sprache</label><select id="oLang"></select></div>
+    </div>
+  </div>
+  <div id="oStage" class="stage"><canvas id="oCan"></canvas><button id="oPick" class="pick">Bild aus der Galerie wählen</button></div>
+  <div id="oTools" hidden>
+    <div class="tools"><input id="oZoom" type="range" min="1" max="5" step="0.01" value="1" aria-label="Zoom"><button id="oRot" aria-label="Drehen">↻</button></div>
+    <p class="hint">Mit dem Finger verschieben, mit zwei Fingern oder dem Regler zoomen. Die Karte sollte den Rahmen ganz ausfüllen.</p>
+  </div>
+  <button id="oSave" class="primary" disabled>Übernehmen</button>
+  <button id="oAgain" class="ghost" hidden>Anderes Bild wählen</button>
+  <button id="oNoImg" class="ghost" hidden>Ohne Bild eintragen</button>
+  <input id="oFile" type="file" accept="image/*" hidden>
 </section>
 
 <div id="menu" class="layer" hidden>
@@ -103,7 +189,7 @@ input[type=text]:focus{border-color:var(--muted)}
     <button id="mExport">Backup speichern</button>
     <button id="mImport">Backup laden</button>
     <button id="mRefresh">Pokédex aktualisieren</button>
-    <small>Deine Sammlung wird nur auf diesem Gerät gespeichert. Sichere sie ab und zu per Backup.</small>
+    <small>Deine Sammlung (inkl. eigener Bilder und Markierungen) wird nur auf diesem Gerät gespeichert. Sichere sie ab und zu per Backup.</small>
   </div>
 </div>
 <input id="file" type="file" accept="application/json,.json" hidden>
@@ -111,22 +197,67 @@ input[type=text]:focus{border-color:var(--muted)}
 <script>
 const $=s=>document.querySelector(s);
 const TCG='https://api.tcgdex.net/v2';
+const PTCG='https://api.pokemontcg.io/v2/cards';
+const MIN_W=500;
 const LANGS=[['de','DE',['de']],['en','EN',['en']],['fr','FR',['fr']],['it','IT',['it']],['es','ES',['es']],
  ['pt-br','PT',['en']],['pt-pt','PT',['en']],['nl','NL',['en']],['pl','PL',['en']],['ru','RU',['en']],
  ['ja','JP',['ja-hrkt','ja']],['ko','KO',['ko']],['zh-tw','ZH',['zh-hant']],['zh-cn','ZH',['zh-hans']],
  ['id','ID',['en']],['th','TH',['en']]];
-const LNAME={de:'Deutsch',en:'Englisch',fr:'Französisch',it:'Italienisch',es:'Spanisch','pt-br':'Portugiesisch','pt-pt':'Portugiesisch',nl:'Niederländisch',pl:'Polnisch',ru:'Russisch',ja:'Japanisch',ko:'Koreanisch','zh-tw':'Chinesisch (trad.)','zh-cn':'Chinesisch (vereinf.)',id:'Indonesisch',th:'Thailändisch'};
+const LNAME={de:'Deutsch',en:'Englisch',fr:'Französisch',it:'Italienisch',es:'Spanisch','pt-br':'Portugiesisch (BR)','pt-pt':'Portugiesisch (PT)',nl:'Niederländisch',pl:'Polnisch',ru:'Russisch',ja:'Japanisch',ko:'Koreanisch','zh-tw':'Chinesisch (trad.)','zh-cn':'Chinesisch (vereinf.)',id:'Indonesisch',th:'Thailändisch'};
+const labelOf=l=>(LANGS.find(x=>x[0]===l)||[0,String(l).toUpperCase()])[1];
 const KEEP=['de','en','fr','es','it','ja-hrkt','ja','ko','zh-hant','zh-hans'];
 const GENS=[[151,'Kanto'],[251,'Johto'],[386,'Hoenn'],[493,'Sinnoh'],[649,'Einall'],[721,'Kalos'],[809,'Alola'],[905,'Galar'],[1025,'Paldea']];
 const genOf=p=>p.gen||(GENS.findIndex(g=>p.id<=g[0])+1||GENS.length+1);
 const region=g=>GENS[g-1]?GENS[g-1][1]:'';
 
+/* ---------- Regions-Motive (eigene Silhouetten, 360×90) ---------- */
+const ART=(()=>{
+  const P=(c,d)=>`<path class="${c}" d="${d}"/>`;
+  const C=(c,x,y,r)=>`<circle class="${c}" cx="${x}" cy="${y}" r="${r}"/>`;
+  const R=(c,a)=>a.map(([x,y,w,h])=>`<rect class="${c}" x="${x}" y="${y}" width="${w}" height="${h}"/>`).join('');
+  const ground=c=>P(c,'M0 90 L0 86 Q180 82 360 87 L360 90Z');
+  const wave=(y,a,st,c)=>{let d=`M0 90 L0 ${y} Q${st/2} ${y-a} ${st} ${y}`,x=st;while(x<360){x+=st;d+=` T${x} ${y}`;}return P(c,d+` L${x} 90Z`);};
+  const pine=(x,h)=>P('l3',`M${x} ${90-h} L${x+h*.3} ${90-h*.45} L${x+h*.12} ${90-h*.45} L${x+h*.4} 87 L${x-h*.4} 87 L${x-h*.12} ${90-h*.45} L${x-h*.3} ${90-h*.45}Z M${x-1.5} 86 h3 v4 h-3Z`);
+  const palm=(x,s)=>`<g class="l3" transform="translate(${x} 90) scale(${s})"><path d="M0 0 Q-4 -30 6 -50 L9 -49 Q0 -28 5 0Z M7 -50 Q-10 -60 -24 -50 Q-8 -56 7 -48Z M7 -50 Q24 -62 38 -52 Q22 -56 7 -48Z M7 -50 Q0 -68 -12 -72 Q2 -64 6 -50Z M7 -50 Q18 -68 30 -70 Q16 -62 8 -49Z M7 -50 Q-4 -46 -12 -32 Q0 -44 8 -48Z M7 -50 Q20 -46 26 -32 Q16 -44 7 -48Z"/></g>`;
+  const mill=(x,h,r)=>{const t=90-h,c=t+h*.14,L=h*.55,w=L*.22;let s='';
+    for(const a of [0,90,180,270])s+=`<path transform="translate(${x} ${c}) rotate(${r+a})" d="M-1 0 L1 0 L1.3 ${-L} L-1.3 ${-L}Z M1.3 ${-L*.32} L${w} ${-L*.32} L${w} ${-L} L1.3 ${-L}Z"/>`;
+    return `<g class="l3"><path d="M${x-h*.16} 90 L${x-h*.1} ${t+h*.2} L${x+h*.1} ${t+h*.2} L${x+h*.16} 90Z M${x-h*.13} ${t+h*.2} L${x} ${t} L${x+h*.13} ${t+h*.2}Z"/>${s}</g>`;};
+  let houses='';for(let x=0;x<230;x+=24){const y=66+(x/24%3)*5;houses+=`M${x} 90 V${y} L${x+4} ${y-7} L${x+18} ${y-7} L${x+22} ${y} V90Z `;}
+  return {
+    0:{h:210,svg:P('l1','M0 90 L0 66 Q90 50 180 64 T360 60 L360 90Z')+P('l2','M0 90 L0 78 Q120 66 240 76 T360 74 L360 90Z')+ground('l3')},
+    1:{h:205,svg:C('sun',305,46,9)+P('l1','M0 90 L0 70 Q60 60 120 68 T240 64 T360 68 L360 90Z')+P('l2','M140 90 L234 28 Q245 21 256 28 L350 90Z')+P('sn','M223 35 L234 28 Q245 21 256 28 L267 35 L260 39 L253 34 L246 40 L239 34 L231 39Z')+P('l3','M0 90 L0 82 Q90 76 180 83 T360 81 L360 90Z')},
+    2:{h:350,svg:P('l1','M0 90 L0 66 Q50 52 110 62 Q170 72 220 58 Q290 40 360 58 L360 90Z')+[[60,78,12],[80,74,14],[100,80,10],[190,78,12],[212,82,10],[330,80,12],[348,76,13]].map(a=>C('l2',...a)).join('')+P('l3','M254 90 V82 H286 V90Z M240 82 L300 82 L290 76 L250 76Z M257 76 V70 H283 V76Z M244 70 L296 70 L287 64 L253 64Z M259 64 V58 H281 V64Z M248 58 L292 58 L284 52 L256 52Z M261 52 V46 H279 V52Z M252 46 L288 46 L281 40 L259 40Z M263 40 V34 H277 V40Z M256 34 L284 34 L278 28 L262 28Z M269 28 V12 H271 V28Z')+ground('l3')},
+    3:{h:150,svg:C('l1',226,30,6)+C('l1',235,21,8)+C('l1',248,13,9)+P('l1','M0 90 L0 74 Q40 62 80 72 Q100 77 120 76 L120 90Z')+P('l2','M130 90 L208 40 Q222 46 236 40 L320 90Z')+wave(84,4,24,'l3')},
+    4:{h:225,svg:P('l1','M0 90 L0 58 L40 40 L70 54 L110 22 L150 50 L185 32 L225 56 L270 16 L312 46 L360 30 L360 90Z')+P('sn','M101 29 L110 22 L120 30 L114 28 L110 32 L106 28Z M260 24 L270 16 L281 25 L275 23 L270 27 L265 23Z M350 34 L360 30 L360 38 L356 36Z')+P('l2','M0 90 L0 76 Q90 66 180 74 T360 72 L360 90Z')+[[24,36],[44,28],[196,32],[214,24],[300,34],[318,26],[336,30]].map(a=>pine(...a)).join('')+P('l3','M0 90 L0 87 L360 87 L360 90Z')},
+    5:{h:260,svg:R('l1',[[40,38,5,52],[110,38,5,52],[0,70,175,3]])+P('ln','M0 62 Q22 56 42 38 Q78 68 112 38 Q140 56 175 62')+R('l2',[[172,60,18,30],[192,48,14,42],[208,66,16,24],[226,30,16,60],[229,22,10,8],[232,14,4,8],[233.5,4,1,10],[244,54,20,36],[266,40,14,50],[282,62,18,28],[302,46,16,44],[320,58,22,32],[344,50,16,40]])+R('l3',[[0,86,360,4]])},
+    6:{h:320,svg:P('l1','M0 90 L0 70 Q90 58 180 68 T360 66 L360 90Z')+P('l2',houses)+P('l3','M246 90 Q258 62 264 40 L266 18 L268 8 L269.3 0 L270.7 0 L272 8 L274 18 L276 40 Q282 62 294 90 L284 90 Q277 72 270 72 Q263 72 256 90Z M257 60 H283 V63 H257Z M261 38 H279 V40.5 H261Z')+ground('l3')},
+    7:{h:190,svg:C('sun',205,52,18)+P('l1','M110 90 L110 82 Q160 52 195 50 Q232 50 268 82 L268 90Z')+wave(80,3,20,'l2')+palm(300,.9)+palm(332,.7)+palm(36,.65)},
+    8:{h:95,svg:P('l1','M0 90 L0 62 Q50 48 100 60 Q150 72 210 58 Q280 44 360 60 L360 90Z')+P('l2','M190 90 V64 H196 V58 H199 V64 H214 V60 H218 V64 H232 V58 H235 V64 H252 V60 H256 V64 H268 V90Z')+P('l3','M270 90 V36 H290 V90Z M266 36 V22 H294 V36Z M266 22 L280 2 L294 22Z')+C('sn',280,29,4.5)+ground('l3')},
+    9:{h:45,svg:P('l1','M0 90 L0 70 Q80 60 160 68 Q260 76 360 66 L360 90Z')+P('l2','M140 90 Q230 50 360 62 L360 90Z')+mill(240,46,15)+mill(305,38,40)+mill(345,30,5)+ground('l3')}
+  };
+})();
+
 let dex=[],byId={},coll=JSON.parse(localStorage.getItem('kd.coll')||'{}');
+let marks=new Set(JSON.parse(localStorage.getItem('kd.mark')||'[]').map(Number));
+let ownURL={};
 const save=()=>localStorage.setItem('kd.coll',JSON.stringify(coll));
+const saveMarks=()=>localStorage.setItem('kd.mark',JSON.stringify([...marks]));
 const pad=n=>String(n).padStart(4,'0');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 const spr=id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+
+/* ---------- Eigene Bilder (IndexedDB) ---------- */
+let dbP;
+function db(){return dbP||(dbP=new Promise((res,rej)=>{const r=indexedDB.open('kartendex',1);r.onupgradeneeded=()=>r.result.createObjectStore('img');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}));}
+async function idb(mode,fn){const d=await db();return new Promise((res,rej)=>{const t=d.transaction('img',mode),q=fn(t.objectStore('img'));t.oncomplete=()=>res(q&&q.result);t.onerror=t.onabort=()=>rej(t.error);});}
+const imgPut=(k,b)=>idb('readwrite',s=>s.put(b,k));
+const imgDel=k=>idb('readwrite',s=>s.delete(k));
+async function imgAll(){const d=await db();return new Promise((res,rej)=>{const out={},t=d.transaction('img'),c=t.objectStore('img').openCursor();c.onsuccess=()=>{const cur=c.result;if(cur){out[cur.key]=cur.value;cur.continue();}};t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error);});}
+function setOwn(id,blob){if(ownURL[id])URL.revokeObjectURL(ownURL[id]);if(blob)ownURL[id]=URL.createObjectURL(blob);else delete ownURL[id];}
+async function loadOwn(){Object.values(ownURL).forEach(u=>URL.revokeObjectURL(u));ownURL={};try{const all=await imgAll();for(const k in all)ownURL[k]=URL.createObjectURL(all[k]);}catch(e){}}
+const toDataURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b);});
+function srcOf(id,c){if(!c)return null;if(c.own)return ownURL[id]||null;if(c.imgUrl)return c.imgUrl;return c.img?`${c.img}/high.webp`:null;}
 
 /* ---------- Pokédex laden ---------- */
 async function gql(url,query){
@@ -154,25 +285,35 @@ async function loadDex(force){
   catch(e){if(c) return c.list; throw e;}
 }
 
-/* ---------- Ebenen (Vollbild, Suche, Menü) + Zurück-Taste ---------- */
-function openLayer(el,replace){el.hidden=false;document.body.style.overflow='hidden';(replace?history.replaceState:history.pushState).call(history,{layer:el.id},'');}
+/* ---------- Ebenen + Zurück-Taste ---------- */
+const depth=()=>(history.state&&history.state.depth)||0;
+function openLayer(el,replace){
+  el.hidden=false;document.body.style.overflow='hidden';
+  if(replace)history.replaceState({layer:el.id,depth:depth()},'');else history.pushState({layer:el.id,depth:depth()+1},'');
+}
 function hideLayers(){document.querySelectorAll('.layer').forEach(l=>l.hidden=true);document.body.style.overflow='';}
 function closeLayer(){if(history.state&&history.state.layer)history.back();else hideLayers();}
-addEventListener('popstate',hideLayers);
+function closeAll(){const d=depth();if(d)history.go(-d);else hideLayers();}
+addEventListener('popstate',()=>{hideLayers();const s=history.state;if(s&&s.layer){const el=document.getElementById(s.layer);if(el){el.hidden=false;document.body.style.overflow='hidden';}}});
 
 /* ---------- Album ---------- */
 function tileHTML(p){
   const c=coll[p.id];
   if(!c) return `<span class="no">#${pad(p.id)}</span><img class="sil" loading="lazy" decoding="async" alt="" src="${spr(p.id)}" onerror="this.remove()"><span class="nm"><b>${esc(p.de)}</b><i>${esc(p.en)}</i></span>`;
-  if(!c.img) return `<div class="textcard"><b>${esc(c.name)}</b><small>${esc(c.set)}<br>Nr. ${esc(c.localId)} · ${esc(c.label)}</small><small>(kein Bild verfügbar)</small></div>`;
-  return `<img loading="lazy" decoding="async" alt="${esc(c.name)}" src="${c.img}/high.webp">`+(c.imgLang!==c.lang?`<span class="badge">${esc(c.label)}</span>`:'');
+  const s=srcOf(p.id,c);
+  if(!s) return `<div class="textcard"><b>${esc(c.name)}</b><small>${esc([c.set,c.localId?'Nr. '+c.localId:'',c.label].filter(Boolean).join(' · '))}</small><small>(kein Bild verfügbar)</small></div>`;
+  return `<img loading="lazy" decoding="async" alt="${esc(c.name)}" src="${esc(s)}">`+(c.imgLang&&c.imgLang!==c.lang?`<span class="badge">${esc(c.label)}</span>`:'');
 }
-function fillTile(el,p){el.className='tile'+(coll[p.id]?' filled':'');el.innerHTML=tileHTML(p);}
+function fillTile(el,p){el.className='tile'+(coll[p.id]?' filled':marks.has(p.id)?' marked':'');el.innerHTML=tileHTML(p);}
+function genHead(g){
+  const a=ART[g]||ART[0],h=document.createElement('h2');h.className='gen';h.dataset.gen=g;h.style.setProperty('--h',a.h);
+  h.innerHTML=`<svg viewBox="0 0 360 90" preserveAspectRatio="xMaxYMax meet" aria-hidden="true">${a.svg}</svg><span class="gt">Generation ${g}${region(g)?` <span>· ${region(g)}</span>`:''}</span><em></em>`;
+  return h;
+}
 function render(){
   const f=document.createDocumentFragment();let last=0;
   dex.forEach(p=>{
-    if(p.g!==last){last=p.g;const h=document.createElement('h2');h.className='gen';h.dataset.gen=p.g;
-      h.innerHTML=`Generation ${p.g}${region(p.g)?` <span>· ${region(p.g)}</span>`:''}<em></em>`;f.appendChild(h);}
+    if(p.g!==last){last=p.g;f.appendChild(genHead(p.g));}
     const el=document.createElement('div');el.dataset.id=p.id;fillTile(el,p);f.appendChild(el);
   });
   $('#album').replaceChildren(f);updateCount();
@@ -184,21 +325,52 @@ function updateCount(){
   document.querySelectorAll('.gen').forEach(h=>{const c=per[h.dataset.gen];h.querySelector('em').textContent=c?`${c[0]} / ${c[1]}`:'';});
 }
 function refreshTile(id){const el=$(`.tile[data-id="${id}"]`);if(el)fillTile(el,byId[id]);updateCount();}
+function focusTile(id,smooth){
+  setTimeout(()=>{const el=$(`.tile[data-id="${id}"]`);if(!el)return;
+    el.scrollIntoView({block:'center',behavior:smooth?'smooth':'auto'});
+    if(!smooth)setTimeout(()=>el.scrollIntoView({block:'center'}),150);
+    el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');},250);
+}
 $('#album').addEventListener('click',e=>{const t=e.target.closest('.tile');if(!t)return;const id=+t.dataset.id;coll[id]?openViewer(id):openSheet(byId[id]);});
 $('#fab').onclick=()=>openSheet(null);
+
+/* ---------- Suche im Kartendex ---------- */
+function matchDex(raw,limit){
+  const q=fold(raw).replace(/^#/,'');if(!q)return [];let hits;
+  if(/^\d+$/.test(q)){const n=+q;hits=dex.filter(p=>String(p.id).startsWith(String(n))).sort((a,b)=>(a.id===n?-1:0)-(b.id===n?-1:0)||a.id-b.id);}
+  else{hits=dex.map(p=>({p,s:p.f.some(x=>x.startsWith(q))?0:p.f.some(x=>x.includes(q))?1:9})).filter(x=>x.s<9).sort((a,b)=>a.s-b.s||a.p.id-b.p.id).map(x=>x.p);}
+  return hits.slice(0,limit);
+}
+function renderFind(){
+  const v=$('#fq').value,hits=matchDex(v,30);
+  $('#fList').innerHTML=hits.map(p=>`<button data-id="${p.id}"><span class="dot${coll[p.id]?' own':marks.has(p.id)?' mk':''}"></span><span class="n">#${pad(p.id)}</span><span>${esc(p.de)}</span><span class="e">${esc(p.en)}</span></button>`).join('')
+    ||(v.trim()?'<p class="hint">Kein Pokémon gefunden.</p>':'');
+}
+$('#fabFind').onclick=()=>{$('#fq').value='';renderFind();openLayer($('#find'));setTimeout(()=>$('#fq').focus(),60);};
+$('#fClose').onclick=closeLayer;
+$('#fq').addEventListener('input',renderFind);
+$('#fq').addEventListener('keydown',e=>{if(e.key==='Enter'){const b=$('#fList button');if(b)b.click();}});
+$('#fList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const id=+b.dataset.id;if(document.activeElement)document.activeElement.blur();closeAll();focusTile(id);});
 
 /* ---------- Vollbild ---------- */
 let vId=null;
 function openViewer(id){
-  const c=coll[id],p=byId[id];vId=id;const img=$('#vImg');
-  if(c.img){img.hidden=false;img.src=`${c.img}/high.webp`;}else{img.hidden=true;}
-  $('#vCap').innerHTML=`#${pad(id)} ${esc(p.de)} · ${esc(c.name)}<br>${esc(c.set)} · Nr. ${esc(c.localId)} · ${esc(LNAME[c.lang]||c.lang)}`+
-    (c.img&&c.imgLang!==c.lang?`<br><small>Bild ersatzweise in ${esc(LNAME[c.imgLang])}</small>`:'');
+  const c=coll[id],p=byId[id];vId=id;const img=$('#vImg'),s=srcOf(id,c);
+  img.hidden=!s;if(s)img.src=s;
+  const parts=[c.set,c.localId?`Nr. ${c.localId}`:'',LNAME[c.lang]||c.lang].filter(Boolean).map(esc).join(' · ');
+  let note='';
+  if(c.own)note='Eigenes Bild';
+  else if(s&&c.imgLang&&c.imgLang!==c.lang)note=`Bild ersatzweise in ${LNAME[c.imgLang]||c.imgLang}`;
+  if(!c.own&&c.src==='ptcg')note+=(note?' · ':'')+'Quelle: Pokémon TCG API';
+  $('#vCap').innerHTML=`#${pad(id)} ${esc(p.de)} · ${esc(c.name)}<br>${parts}`+(note?`<br><small>${esc(note)}</small>`:'');
   openLayer($('#viewer'));
 }
 $('#viewer').addEventListener('click',closeLayer);
 $('#vReplace').addEventListener('click',e=>{e.stopPropagation();$('#viewer').hidden=true;openSheet(byId[vId],true);});
-$('#vRemove').addEventListener('click',e=>{e.stopPropagation();if(!confirm('Karte aus dem Album entfernen?'))return;delete coll[vId];save();refreshTile(vId);closeLayer();});
+$('#vOwn').addEventListener('click',e=>{e.stopPropagation();openOwn({p:byId[vId],rec:{...coll[vId]}});});
+$('#vRemove').addEventListener('click',async e=>{e.stopPropagation();if(!confirm('Karte aus dem Album entfernen?'))return;
+  if(coll[vId].own){await imgDel(vId).catch(()=>{});setOwn(vId,null);}
+  delete coll[vId];save();refreshTile(vId);closeLayer();});
 
 /* ---------- Editionen ---------- */
 const setCache={};let setOpts=[],setsLoaded=false;
@@ -221,40 +393,98 @@ async function loadSetList(){
 }
 function setFilter(){const q=fold($('#qSet').value);if(!q)return null;return new Set(setOpts.filter(o=>o.f.includes(q)).map(o=>o.id));}
 
-/* ---------- Suche ---------- */
-let selPoke=null,searchToken=0;
+/* ---------- Bildquellen ---------- */
+async function tget(url,ms=9000){
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),ms);
+  try{const r=await fetch(url,{signal:ac.signal});return r.ok?await r.json():null;}catch(e){return null;}finally{clearTimeout(t);}
+}
+function probe(url){return new Promise(res=>{const i=new Image();const t=setTimeout(()=>res(false),12000);
+  i.onload=()=>{clearTimeout(t);const w=i.naturalWidth,r=w/i.naturalHeight;res(w>=MIN_W&&r>.66&&r<.77);};
+  i.onerror=()=>{clearTimeout(t);res(false);};i.src=url;});}
+const setKey=s=>fold(s).replace(/&/g,'and').replace(/[^a-z0-9]/g,'');
+async function ptcgFind(enName,pokeEn,enSet,localId){
+  const nums=[...new Set([String(localId),String(localId).replace(/^0+(?=\d)/,'')])];
+  const nameQ=enName?`name:"${enName.replace(/["\\]/g,'')}"`:`name:*${fold(pokeEn).replace(/[^a-z0-9]+/g,'*')}*`;
+  const q=`${nameQ} (${nums.map(n=>`number:"${n}"`).join(' OR ')})`;
+  const j=await tget(`${PTCG}?q=${encodeURIComponent(q)}&select=id,name,number,set,images&pageSize=30`);
+  if(!j||!Array.isArray(j.data))return null;
+  const k=setKey(enSet);
+  return j.data.find(d=>d.set&&d.images&&d.images.large&&setKey(d.set.name)===k)||null;
+}
+const imgCache=new Map();
+function resolveImage(c,p){
+  const key=c.lang+'|'+c.id;
+  if(imgCache.has(key))return imgCache.get(key);
+  const pr=(async()=>{
+    if(c.image&&await probe(c.image+'/high.webp'))return {img:c.image,imgLang:c.lang,src:'tcgdex'};
+    if(/^(ja|ko|zh)/.test(c.lang))return null;
+    let en=c.lang==='en'?{name:c.name,set:{name:c.setName}}:null;
+    for(const l of ['de','en']){
+      if(l===c.lang)continue;
+      const j=await tget(`${TCG}/${l}/cards/${encodeURIComponent(c.id)}`);if(!j)continue;
+      if(l==='en')en=j;
+      if(j.image&&await probe(j.image+'/high.webp'))return {img:j.image,imgLang:l,src:'tcgdex'};
+    }
+    const enSet=(en&&en.set&&en.set.name)||(await getSets('en'))[c.setId];
+    if(!enSet)return null;
+    const hit=await ptcgFind(en&&en.name,p?p.en:'',enSet,c.localId);
+    if(hit&&await probe(hit.images.large))return {imgUrl:hit.images.large,thumbUrl:hit.images.small,imgLang:'en',src:'ptcg'};
+    return null;
+  })();
+  imgCache.set(key,pr);return pr;
+}
+const jobs=[];let active=0;
+function enqueue(j){jobs.push(j);pump();}
+function pump(){while(active<3&&jobs.length){const j=jobs.shift();active++;j().catch(()=>{}).finally(()=>{active--;pump();});}}
+
+/* ---------- Karten suchen ---------- */
+let selPoke=null,searchToken=0,lastAll=[],lastPoke=null,busy=false;
+function updMark(){const b=$('#markBtn'),m=!!(selPoke&&marks.has(selPoke.id));b.textContent=m?'Markierung „Keine IR / SIR“ entfernen':'Keine IR / SIR verfügbar';b.classList.toggle('on',m);}
 function openSheet(p,replace){
   selPoke=p||null;$('#qPoke').value=p?`#${pad(p.id)} ${p.de}`:'';$('#qSet').value='';
-  $('#results').innerHTML='';$('#status').textContent='';$('#sug').hidden=true;
+  searchToken++;io.disconnect();jobs.length=0;
+  $('#results').innerHTML='';$('#status').textContent='';$('#sug').hidden=true;updMark();
   openLayer($('#sheet'),replace);loadSetList();
   if(!p) setTimeout(()=>$('#qPoke').focus(),60);
 }
 $('#sClose').onclick=closeLayer;
 $('#qPoke').addEventListener('input',()=>{
-  selPoke=null;const q=fold($('#qPoke').value).replace(/^#/,'');const box=$('#sug');
-  if(!q){box.hidden=true;return;}
-  let hits;
-  if(/^\d+$/.test(q)){const n=+q;hits=dex.filter(p=>String(p.id).startsWith(String(n))).sort((a,b)=>(a.id===n?-1:0)-(b.id===n?-1:0)||a.id-b.id);}
-  else{hits=dex.map(p=>({p,s:p.f.some(x=>x.startsWith(q))?0:p.f.some(x=>x.includes(q))?1:9})).filter(x=>x.s<9).sort((a,b)=>a.s-b.s||a.p.id-b.p.id).map(x=>x.p);}
-  hits=hits.slice(0,8);
+  selPoke=null;updMark();const box=$('#sug'),hits=matchDex($('#qPoke').value,8);
   box.innerHTML=hits.map(p=>`<button data-id="${p.id}"><span class="n">#${pad(p.id)}</span><span>${esc(p.de)}</span><span class="e">${esc(p.en)}</span></button>`).join('');
   box.hidden=!hits.length;
 });
-$('#sug').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;selPoke=byId[b.dataset.id];$('#qPoke').value=`#${pad(selPoke.id)} ${selPoke.de}`;$('#sug').hidden=true;});
+$('#sug').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;selPoke=byId[b.dataset.id];$('#qPoke').value=`#${pad(selPoke.id)} ${selPoke.de}`;$('#sug').hidden=true;updMark();});
 $('#qPoke').addEventListener('keydown',e=>{if(e.key==='Enter')$('#go').click();});
 $('#qSet').addEventListener('keydown',e=>{if(e.key==='Enter')$('#go').click();});
-$('#go').onclick=()=>{
+function ensurePoke(){
   if(!selPoke&&!$('#sug').hidden){const b=$('#sug button');if(b)b.click();}
-  if(!selPoke){$('#status').textContent='Bitte zuerst ein Pokémon aus der Vorschlagsliste wählen.';return;}
-  $('#sug').hidden=true;if(document.activeElement)document.activeElement.blur();searchCards(selPoke);
+  if(!selPoke){$('#status').textContent='Bitte zuerst ein Pokémon aus der Vorschlagsliste wählen.';return false;}
+  return true;
+}
+$('#go').onclick=()=>{if(!ensurePoke())return;$('#sug').hidden=true;if(document.activeElement)document.activeElement.blur();searchCards(selPoke);};
+$('#markBtn').onclick=()=>{
+  if(!ensurePoke())return;
+  const id=selPoke.id;marks.has(id)?marks.delete(id):marks.add(id);saveMarks();refreshTile(id);
+  if(document.activeElement)document.activeElement.blur();closeAll();focusTile(id);
 };
 const nameRe=n=>new RegExp('(^|[^\\p{L}\\p{N}])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^\\p{L}\\p{N}])','iu');
 
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting)return;io.unobserve(e.target);
+  const b=e.target,tok=searchToken,c=lastAll[+b.dataset.i],p=lastPoke;
+  enqueue(()=>resolveImage(c,p).then(r=>{if(tok===searchToken)fillThumb(b,c,r);}));
+}),{root:$('#sheet'),rootMargin:'400px 0px'});
+function fillThumb(b,c,r){
+  const ci=b.querySelector('.ci');
+  if(r)ci.innerHTML=`<img alt="" decoding="async" src="${esc(r.imgUrl?(r.thumbUrl||r.imgUrl):r.img+'/low.webp')}">`+(r.imgLang!==c.lang?`<span class="badge">${esc(labelOf(r.imgLang))}</span>`:'');
+  else{const s=ci.querySelector('small');if(s)s.textContent='kein Bild online';}
+}
+
 async function searchCards(p){
-  const tok=++searchToken,st=$('#status'),res=$('#results');
-  res.innerHTML='';st.textContent='Suche läuft …';
+  const tok=++searchToken;io.disconnect();jobs.length=0;
+  $('#results').innerHTML='';$('#status').textContent='Suche läuft …';
   await loadSetList();const filt=setFilter();
-  if(filt&&!filt.size){st.textContent='Keine Edition passt zu dieser Eingabe.';return;}
+  if(filt&&!filt.size){if(tok===searchToken)showResults(p,[],'Keine Edition passt zu dieser Eingabe.');return;}
   const seen=new Set();
   const groups=await Promise.all(LANGS.map(async([lang,label,src])=>{
     let terms=src.map(s=>p.names[s]).filter(Boolean);if(!terms.length)terms=[p.en];
@@ -278,41 +508,133 @@ async function searchCards(p){
   }));
   if(tok!==searchToken)return;
   const total=groups.reduce((a,g)=>a+g.out.length,0);
-  if(!total){st.textContent='Keine Karten gefunden.';return;}
-  st.textContent=`${total} Karten gefunden – tippe auf deine Karte.`;
-  const all=[];
-  res.innerHTML=groups.filter(g=>g.out.length).map(g=>`<div class="grp">${esc(LNAME[g.lang])} · ${g.out.length}</div><div class="rgrid">`+
-    g.out.map(c=>{all.push(c);return `<button class="res" data-i="${all.length-1}"><div class="ci">${c.image?`<img loading="lazy" decoding="async" alt="" src="${c.image}/low.webp">`:`<div class="textcard"><b>${esc(c.name)}</b><small>kein Bild</small></div>`}</div><span>${esc(c.setName)} · ${esc(c.localId)}</span></button>`;}).join('')+'</div>').join('');
-  res.onclick=e=>{const b=e.target.closest('.res');if(b)choose(p,all[+b.dataset.i]);};
+  showResults(p,groups.filter(g=>g.out.length),total?`${total} Karten gefunden – tippe auf deine Karte. Fehlende Bilder werden aus weiteren Quellen ergänzt.`:'Keine Karten gefunden.');
+}
+function showResults(p,groups,msg){
+  const res=$('#results');lastAll=[];lastPoke=p;
+  $('#status').textContent=msg;
+  res.innerHTML=`<button id="ownBtn" class="ghost">Bild manuell hinzufügen</button>`+groups.map(g=>`<div class="grp">${esc(LNAME[g.lang])} · ${g.out.length}</div><div class="rgrid">`+
+    g.out.map(c=>{lastAll.push(c);return `<button class="res${c.image?'':' need'}" data-i="${lastAll.length-1}"><div class="ci">${c.image?`<img loading="lazy" decoding="async" alt="" src="${c.image}/low.webp">`:`<div class="textcard"><b>${esc(c.name)}</b><small>Bild wird gesucht …</small></div>`}</div><span>${esc(c.setName)} · ${esc(c.localId)}</span></button>`;}).join('')+'</div>').join('');
+  res.onclick=e=>{
+    if(e.target.closest('#ownBtn'))return startManual(p);
+    const b=e.target.closest('.res');if(b)choose(p,lastAll[+b.dataset.i]);
+  };
+  res.querySelectorAll('.res.need').forEach(b=>io.observe(b));
 }
 
 async function choose(p,c){
+  if(busy)return;
   if(coll[p.id]&&!confirm(`Für #${pad(p.id)} ${p.de} ist schon eine Karte eingetragen. Ersetzen?`))return;
-  let img=c.image||null,imgLang=c.lang;
-  if(!img){
-    $('#status').textContent='Suche Ersatzbild …';
-    for(const l of ['de','en']){try{const r=await fetch(`${TCG}/${l}/cards/${encodeURIComponent(c.id)}`);if(r.ok){const j=await r.json();if(j.image){img=j.image;imgLang=l;break;}}}catch(e){}}
-  }
-  coll[p.id]={cardId:c.id,lang:c.lang,label:c.label,name:c.name,set:c.setName,localId:c.localId,img,imgLang,added:Date.now()};
-  save();refreshTile(p.id);closeLayer();
-  setTimeout(()=>{const el=$(`.tile[data-id="${p.id}"]`);if(!el)return;el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');},250);
+  busy=true;$('#status').textContent='Prüfe Bild …';
+  try{
+    const r=await resolveImage(c,p);
+    const rec={cardId:c.id,lang:c.lang,label:c.label,name:c.name,set:c.setName,localId:c.localId,added:Date.now()};
+    if(!r){$('#status').textContent='';openOwn({p,rec,noImg:true});return;}
+    Object.assign(rec,r);
+    await commit(p.id,rec);
+  }finally{busy=false;}
 }
+async function commit(id,rec,blob){
+  try{
+    if(blob){await imgPut(id,blob);setOwn(id,blob);rec.own=true;}
+    else{delete rec.own;if(coll[id]&&coll[id].own){await imgDel(id).catch(()=>{});setOwn(id,null);}}
+  }catch(e){alert('Das Bild konnte nicht gespeichert werden (Speicher voll?).');return;}
+  coll[id]=rec;save();refreshTile(id);closeAll();focusTile(id,true);
+}
+
+/* ---------- Eigenes Bild ---------- */
+$('#oLang').innerHTML=LANGS.map(([c])=>`<option value="${c}">${esc(LNAME[c])}</option>`).join('');
+let own=null;
+const oc={img:null,url:null,z:1,ox:0,oy:0,base:1,fw:0,fh:0,d:1,pts:new Map(),pd:0};
+const can=$('#oCan');
+const iw=s=>s.naturalWidth||s.width,ih=s=>s.naturalHeight||s.height;
+function startManual(p){
+  if(coll[p.id]&&!confirm(`Für #${pad(p.id)} ${p.de} ist schon eine Karte eingetragen. Ersetzen?`))return;
+  openOwn({p,rec:null});
+}
+function openOwn(ctx){
+  own=ctx;const p=ctx.p,r=ctx.rec;
+  $('#oInfo').innerHTML=(ctx.noImg?'Für diese Karte wurde online kein Bild in ausreichender Qualität gefunden. Du kannst ein eigenes Foto oder einen Scan verwenden.<br><br>':'')+
+    `<b>#${pad(p.id)} ${esc(p.de)}</b>`+(r?`<br>${esc([r.name,r.set,r.localId?'Nr. '+r.localId:'',LNAME[r.lang]].filter(Boolean).join(' · '))}`:'');
+  $('#oMeta').hidden=!!r;
+  if(!r){$('#oSet').value=$('#qSet').value;$('#oNo').value='';$('#oLang').value='de';}
+  $('#oNoImg').hidden=!ctx.noImg;
+  oc.img=null;$('#oPick').hidden=false;$('#oTools').hidden=true;$('#oAgain').hidden=true;$('#oSave').disabled=true;
+  openLayer($('#own'));fitCan();draw();
+}
+function fitCan(){const st=$('#oStage');oc.fw=st.clientWidth;oc.fh=st.clientHeight;oc.d=devicePixelRatio||1;can.width=Math.round(oc.fw*oc.d);can.height=Math.round(oc.fh*oc.d);}
+function geom(){const s=oc.base*oc.z,w=iw(oc.img)*s,h=ih(oc.img)*s;return {s,x:(oc.fw-w)/2+oc.ox,y:(oc.fh-h)/2+oc.oy,w,h};}
+function clampO(){const g=geom(),mx=Math.max(0,(g.w-oc.fw)/2),my=Math.max(0,(g.h-oc.fh)/2);oc.ox=Math.max(-mx,Math.min(mx,oc.ox));oc.oy=Math.max(-my,Math.min(my,oc.oy));}
+function draw(){const x=can.getContext('2d');x.setTransform(oc.d,0,0,oc.d,0,0);x.clearRect(0,0,oc.fw,oc.fh);if(!oc.img)return;const g=geom();x.imageSmoothingQuality='high';x.drawImage(oc.img,g.x,g.y,g.w,g.h);}
+function resetView(){oc.base=Math.max(oc.fw/iw(oc.img),oc.fh/ih(oc.img));oc.z=1;oc.ox=oc.oy=0;$('#oZoom').value=1;draw();}
+function setZoom(z){const nz=Math.min(5,Math.max(1,z)),k=nz/oc.z;oc.ox*=k;oc.oy*=k;oc.z=nz;$('#oZoom').value=nz;}
+$('#oClose').onclick=closeLayer;
+$('#oPick').onclick=$('#oAgain').onclick=()=>$('#oFile').click();
+$('#oFile').onchange=e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{if(oc.url)URL.revokeObjectURL(oc.url);oc.url=u;oc.img=im;fitCan();resetView();
+    $('#oPick').hidden=true;$('#oTools').hidden=false;$('#oAgain').hidden=false;$('#oSave').disabled=false;};
+  im.onerror=()=>{URL.revokeObjectURL(u);alert('Dieses Bild kann nicht geöffnet werden. Bitte ein JPG-, PNG- oder WebP-Bild wählen.');};
+  im.src=u;
+};
+$('#oRot').onclick=()=>{if(!oc.img)return;const s=oc.img,w=iw(s),h=ih(s),c=document.createElement('canvas');c.width=h;c.height=w;
+  const x=c.getContext('2d');x.translate(h,0);x.rotate(Math.PI/2);x.drawImage(s,0,0);oc.img=c;resetView();};
+$('#oZoom').addEventListener('input',e=>{if(!oc.img)return;setZoom(+e.target.value);clampO();draw();});
+can.addEventListener('pointerdown',e=>{if(!oc.img)return;can.setPointerCapture(e.pointerId);oc.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});oc.pd=0;});
+can.addEventListener('pointermove',e=>{
+  const pt=oc.pts.get(e.pointerId);if(!pt)return;
+  if(oc.pts.size===1){oc.ox+=e.clientX-pt.x;oc.oy+=e.clientY-pt.y;}
+  pt.x=e.clientX;pt.y=e.clientY;
+  if(oc.pts.size===2){const [a,b]=[...oc.pts.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(oc.pd)setZoom(oc.z*d/oc.pd);oc.pd=d;}
+  clampO();draw();
+});
+const ptrUp=e=>{oc.pts.delete(e.pointerId);oc.pd=0;};
+can.addEventListener('pointerup',ptrUp);can.addEventListener('pointercancel',ptrUp);
+function exportCrop(){
+  const g=geom(),sx=-g.x/g.s,sy=-g.y/g.s,sw=oc.fw/g.s,sh=oc.fh/g.s;
+  const cv=document.createElement('canvas');cv.width=630;cv.height=880;
+  const x=cv.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(oc.img,sx,sy,sw,sh,0,0,630,880);
+  return new Promise(r=>cv.toBlob(b=>r({blob:b,srcW:Math.round(sw)}),'image/webp',.88));
+}
+$('#oSave').onclick=async()=>{
+  if(!oc.img||!own)return;
+  const {blob,srcW}=await exportCrop();
+  if(!blob){alert('Das Bild konnte nicht verarbeitet werden.');return;}
+  if(srcW<450&&!confirm(`Der gewählte Ausschnitt ist nur ${srcW} Pixel breit und könnte im Vollbild unscharf wirken. Trotzdem übernehmen?`))return;
+  const p=own.p;let rec;
+  if(own.rec)rec={...own.rec};
+  else{const lang=$('#oLang').value,l=LANGS.find(x=>x[0]===lang);
+    rec={cardId:null,lang,label:l[1],name:l[2].map(s=>p.names[s]).find(Boolean)||p.en,set:$('#oSet').value.trim(),localId:$('#oNo').value.trim()};}
+  Object.assign(rec,{img:null,imgUrl:null,thumbUrl:null,imgLang:rec.lang,src:'own',added:rec.added||Date.now()});
+  await commit(p.id,rec,blob);
+};
+$('#oNoImg').onclick=()=>{if(own&&own.rec)commit(own.p.id,{...own.rec,img:null,imgLang:own.rec.lang,src:null});};
 
 /* ---------- Menü & Backup ---------- */
 $('#menuBtn').onclick=()=>openLayer($('#menu'));
 $('#menu').onclick=e=>{if(e.target.id==='menu')closeLayer();};
-$('#mExport').onclick=()=>{
-  const blob=new Blob([JSON.stringify({app:'kartendex',v:1,date:new Date().toISOString(),collection:coll})],{type:'application/json'});
+$('#mExport').onclick=async()=>{
+  closeLayer();
+  const images={};
+  try{const all=await imgAll();for(const k in all)if(coll[k]&&coll[k].own)images[k]=await toDataURL(all[k]);}catch(e){}
+  const blob=new Blob([JSON.stringify({app:'kartendex',v:2,date:new Date().toISOString(),collection:coll,marks:[...marks],images})],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`kartendex-backup-${new Date().toISOString().slice(0,10)}.json`;
-  document.body.appendChild(a);a.click();a.remove();closeLayer();
+  document.body.appendChild(a);a.click();a.remove();
 };
 $('#mImport').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
-  try{const d=JSON.parse(await f.text());const c=d.collection||d;if(!c||typeof c!=='object')throw 0;
-    if(!confirm(`Backup mit ${Object.keys(c).length} Karten laden? Die aktuelle Sammlung wird ersetzt.`))return;
-    coll=c;save();render();closeLayer();}
-  catch(err){alert('Diese Datei ist kein gültiges Backup.');}
+  let d,c;
+  try{d=JSON.parse(await f.text());c=d.collection||d;if(!c||typeof c!=='object')throw 0;}
+  catch(err){alert('Diese Datei ist kein gültiges Backup.');return;}
+  const ni=d.images?Object.keys(d.images).length:0;
+  if(!confirm(`Backup mit ${Object.keys(c).length} Karten${ni?` (davon ${ni} mit eigenem Bild)`:''} laden? Die aktuelle Sammlung wird ersetzt.`))return;
+  try{await idb('readwrite',s=>s.clear());for(const [k,u] of Object.entries(d.images||{}))await imgPut(+k,await (await fetch(u)).blob());}
+  catch(err){alert('Eigene Bilder konnten nicht vollständig geladen werden.');}
+  coll=c;save();
+  if(Array.isArray(d.marks)){marks=new Set(d.marks.map(Number));saveMarks();}
+  await loadOwn();render();closeLayer();
 };
 $('#mRefresh').onclick=()=>{closeLayer();init(true);};
 
@@ -322,9 +644,11 @@ async function init(force){
   try{dex=await loadDex(force);}
   catch(e){L.innerHTML='Pokédex konnte nicht geladen werden.<br>Bitte Internetverbindung prüfen.<br><br><button id="retry" style="text-decoration:underline">Erneut versuchen</button>';$('#retry').onclick=()=>init(force);return;}
   byId={};dex.forEach(p=>{p.f=[fold(p.de),fold(p.en)];p.g=genOf(p);byId[p.id]=p;});
+  await loadOwn();
   L.hidden=true;render();
 }
 history.replaceState(null,'');init();
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
